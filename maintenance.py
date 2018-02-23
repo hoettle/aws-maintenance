@@ -19,6 +19,10 @@ import argparse
 import handlers
 
 
+def getSessions(profile_names):
+    pass
+
+
 def main(argv=None, parser=None):
     if argv == None:
         argv = sys.argv[1:]
@@ -27,13 +31,20 @@ def main(argv=None, parser=None):
         parser = argparse.ArgumentParser(description='Perform maintenance tasks for AWS accounts')
 
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {}'.format(__version__))
-    parser.add_argument('profile', metavar='PROFILE', nargs='+', help='The AWS profile(s) that require maintenance (default: ALL)')
+    parser.add_argument('-p', '--profile', type=str, metavar='PROFILE', help='The AWS profile(s) that require maintenance, comma separated (default: all)')
 
     subparsers = parser.add_subparsers(dest='cmd')
+    subparsers.add_parser('all')
 
     args = parser.parse_args(argv)
 
-    print(args.profile)
+    if args.profile is not None:
+        profile_names = args.profile.split(',')
+    else:
+        profile_names = None
+
+    sessions = getSessions(profile_names)
+
 
 if __name__ == '__main__':
     main()
