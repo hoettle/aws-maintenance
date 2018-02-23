@@ -12,8 +12,8 @@ class KeyRotator:
     def configure_parser(self, parser):
         pass
 
-    def handle(self, Session):
-        pass
+    def handle(self, session):
+        print('Rotating keys for {}'.format(session.profile_name))
 
 
 def getClass():

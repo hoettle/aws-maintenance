@@ -26,7 +26,8 @@ for x in imports():
     if "handlers.handler_" in x:
         logger.info('Found %s', x)
         cls = sys.modules[x].getClass()
-        __handler_list.append(cls)
+        handler = cls()
+        __handler_list.append(handler)
 
 
 def get_all_handlers():
