@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 # Handlers
 from . import handler_access_key_rotation
+from . import handler_update_security_group
 #...
 
 ## Master list of handlers
