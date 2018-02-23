@@ -5,22 +5,21 @@ if sys.version_info < (2, 7):
     print('This program requires Python 2.7 or newer.')
     sys.exit(1)
 
-if sys.version_info >= (2, 7):
-    import logging
-    logger = logging.getLogger(__name__)
-    loghandler=logging.StreamHandler()
-    loghandler.setFormatter(logging.Formatter("Maintenance: %(levelname)s: %(asctime)s: %(filename)s(%(lineno)d): %(message)s"))
-    logger.addHandler(loghandler)
-    loghandler.setLevel(logging.DEBUG)
-    logger.setLevel(logging.DEBUG)
+import logging
+logger = logging.getLogger(__name__)
+loghandler=logging.StreamHandler()
+loghandler.setFormatter(logging.Formatter("Maintenance: %(levelname)s: %(asctime)s: %(filename)s(%(lineno)d): %(message)s"))
+logger.addHandler(loghandler)
+loghandler.setLevel(logging.DEBUG)
+logger.setLevel(logging.DEBUG)
 
 
 import argparse
-import handlers
 
 import boto3
 from boto3 import session
 
+import handlers
 
 # Read this once for the lifetime of the invocation
 ALL_PROFILES = session.Session().available_profiles
@@ -48,14 +47,11 @@ def parse_aws_profiles(profile_names_str):
 
 def getSessions(profile_names):
     """Given a set of profiles, give us the session objects that represent them and which we can use to perform the maintenance"""
-    logger.info('Profiles: %s', profile_names)
+    logger.debug('Profiles: %s', profile_names)
 
-    for profile_name in profile_names:
-        logger.info('Using profile: {}'.format(profile_name))
-        current_session = session.Session(profile_name=profile_name)
-        sts = current_session.client('sts')
-        ident = sts.get_caller_identity()
-        logger.info('Profile: {}, Account: {}, User:{}'.format(profile_name,ident['Account'], ident['Arn']))
+    sessions = [ session.Session(profile_name=profile_name) for profile_name in profile_names ]
+
+    return sessions
 
 
 def main(argv=None, parser=None):
@@ -67,13 +63,20 @@ def main(argv=None, parser=None):
 
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {}'.format(__version__))
     parser.add_argument('-p', '--profile', default=ALL_PROFILES, dest='profile_names', type=parse_aws_profiles, metavar='PROFILE', help='The AWS profile(s) that require maintenance, comma separated (default: all)')
-
-    subparsers = parser.add_subparsers(dest='cmd')
-    subparsers.add_parser('all')
+    parser.add_argument('--dummy', help='Run a dummy handler that iterates over all the accounts', action='store_true')
 
     args = parser.parse_args(argv)
 
     sessions = getSessions(args.profile_names)
+
+    if(args.dummy):
+        all_handlers = [ handlers.DummyHandler() ]
+    else:
+        all_handlers = handlers.get_all_handlers()
+
+    for s in sessions:
+        for h in all_handlers:
+            h.handle(s)
 
 
 if __name__ == '__main__':

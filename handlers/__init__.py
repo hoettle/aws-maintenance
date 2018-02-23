@@ -2,6 +2,9 @@ import types
 import sys
 import logging
 
+import boto3
+from boto3 import session
+
 logger = logging.getLogger(__name__)
 
 # Handlers
@@ -28,3 +31,10 @@ for x in imports():
 
 def get_all_handlers():
     return __handler_list
+
+
+class DummyHandler:
+    def handle(self, my_session):
+        sts = my_session.client('sts')
+        ident = sts.get_caller_identity()
+        print('Profile: {}, Account: {}, User:{}'.format(my_session.profile_name,ident['Account'], ident['Arn']))
